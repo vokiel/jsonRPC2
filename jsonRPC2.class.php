@@ -29,12 +29,6 @@ class jsonRPC2{
 	
 	public function __construct($request){
 		$this->request = json_decode($request,true);
-		if (empty($this->request) || !is_array($this->request)){
-			throw new Exception($this->errors[0]['message'],$this->errors[0]['code']);
-		}
-		if ($this->request['jsonrpc'] != '2.0'){
-			throw new Exception($this->errors[1]['message'],$this->errors[1]['code']);
-		}
 		if (!$this->checkId()){
 			throw new Exception('Notification request',0);	
 		}
@@ -46,10 +40,7 @@ class jsonRPC2{
 	 */
 	public function call(){
 		try {
-			if (!$this->checkMethod()){
-				throw new Exception(2);	
-			}
-			$this->checkParams();
+			$this->checkRequest();
 			if (!$res = call_user_func_array(array(self, $this->request['method']),array('null'))){
 				throw new Exception(4);
 			}
@@ -58,55 +49,73 @@ class jsonRPC2{
 			$this->response['result'] = 'null';
 			$this->response['error'] = $this->errors[$e->getMessage()];
 		}
-    }
-    
-    /**
-     * Sending json encoded response to browser
-     * 
-     */
-    public function send(){
-    	header('Cache-Control: no-cache, must-revalidate');
+	}
+	
+	/**
+	 * Sending json encoded response to browser
+	 * 
+	 */
+	public function send(){
+		header('Cache-Control: no-cache, must-revalidate');
 		header('Content-Type: application/json; charset=utf-8');
-    	echo json_encode($this->response);
-    }
-    
-    /**
-     * Checking if request method exists and is allowed to be run
-     * 
-     * @return bool
-     */
-    private function checkMethod(){
-    	if (method_exists(self, $this->request['method']) && !empty($this->request['metod']) && in_array($this->request['metod'],$this->methods)){
-    		return true;
-    	}
-    	return false;
-    }
-    
-    /**
-     * Checking if the parameters are correct (array or object)
-     * If params are incorrect then reset them to empty array
-     */
-    private function checkParams(){
-    	if (empty($this->request['params']) || (!is_array($this->request['params']) && !is_object($this->request['params']))){
-    		$this->request['params'] = array();
-    	}
-    }
-    
-    /**
-     * Checking the ID parameter
-     * If there is no ID parameter provided then the request should be treated as Notification (Procedure Call without Response)
-     * If the ID is incorrect generate new id
-     * 
-     * @return bool
-     */
-    private function checkId(){
-      	if (empty($this->request['id'])){ // Notification
-      		return false;
-      	} elseif (is_scalar($this->request['id'])){
-    		$this->response['id'] = $this->request['id'];
-    	}
+		echo json_encode($this->response,true);
+	}
+	
+	/**
+	 * Checking request object
+	 * 
+	 * @throws Exception
+	 */
+	private function checkRequest(){
+		if (empty($this->request) || !is_array($this->request)){
+			throw new Exception(0);
+		}
+		if ($this->request['jsonrpc'] != '2.0'){
+			throw new Exception(1);
+		}
+		if (!$this->checkMethod()){
+			throw new Exception(2);	
+		}
+		$this->checkParams();
+	}
+	
+	/**
+	 * Checking if request method exists and is allowed to be run
+	 * 
+	 * @return bool
+	 */
+	private function checkMethod(){
+		if (method_exists(self, $this->request['method']) && !empty($this->request['metod']) && in_array($this->request['metod'],$this->methods)){
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Checking if the parameters are correct (array or object)
+	 * If params are incorrect then reset them to empty array
+	 */
+	private function checkParams(){
+		if (empty($this->request['params']) || (!is_array($this->request['params']) && !is_object($this->request['params']))){
+			$this->request['params'] = array();
+		}
+	}
+	
+	/**
+	 * Checking the ID parameter
+	 * If there is no ID parameter provided then the request should be treated as Notification (Procedure Call without Response)
+	 * If the ID is incorrect generate new id
+	 * 
+	 * @return bool
+	 */
+	private function checkId(){
+	  	if (empty($this->request['id'])){ // Notification
+	  		return false;
+	  	} elseif (is_scalar($this->request['id'])){
+			$this->response['id'] = $this->request['id'];
+		}
    		$this->response['id'] = rand(10000,99999);
    		return true;
-    }
+	}
 }
 ?>

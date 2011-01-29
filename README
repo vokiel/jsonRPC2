@@ -1,1 +1,3 @@
+JSON-RPC is a remote procedure call protocol encoded in JSON. It is a very simple protocol (and very similar to XML-RPC), defining only a handful of data types and commands. In contrast to XML-RPC or SOAP, it allows for bidirectional communication between the service and the client, treating each more like peers and allowing peers to call one another or send notifications to one another. It also allows multiple calls to be sent to a peer which may be answered out of order.
+
 More info about jsonRPC can bo found here: http://groups.google.com/group/json-rpc/web/json-rpc-1-2-proposal?pli=1
